@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Lobster&family=DM+Sans:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  body { @apply font-body text-gray-900 bg-white; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-green-primary text-white
+           px-8 py-3 rounded-xl font-medium text-base
+           shadow-[0_4px_16px_rgba(0,146,60,0.30)]
+           hover:bg-green-dark hover:-translate-y-0.5
+           transition-all duration-200;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 border border-black/15
+           text-gray-600 px-6 py-3 rounded-xl text-base
+           hover:border-green-primary hover:text-green-primary
+           hover:-translate-y-0.5 transition-all duration-200;
+  }
+  .btn-white {
+    @apply inline-flex items-center gap-2 bg-white text-green-primary
+           px-8 py-3 rounded-xl font-medium
+           shadow-[0_4px_16px_rgba(0,0,0,0.12)]
+           hover:bg-gray-50 hover:-translate-y-0.5
+           transition-all duration-200;
+  }
+  .card {
+    @apply bg-white border border-gray-200 rounded-2xl p-8;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 border-[1.5px] border-gray-200 rounded-xl
+           bg-gray-50 text-gray-900 text-sm font-body
+           focus:outline-none focus:border-green-primary focus:bg-white
+           focus:shadow-[0_0_0_3px_rgba(0,146,60,0.12)]
+           placeholder:text-gray-400 transition-all duration-200;
+  }
+  .section-tag {
+    @apply text-xs font-medium uppercase tracking-widest text-green-primary;
+  }
+  .section-title {
+    @apply font-display text-4xl text-gray-900 leading-tight tracking-tight;
+  }
+  .section-sub {
+    @apply text-lg text-gray-600 font-light leading-relaxed;
+  }
+}
