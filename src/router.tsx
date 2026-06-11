@@ -13,6 +13,7 @@ import { DashboardPage }         from './panel/DashboardPage'
 import { EmpleadosPage }         from './panel/EmpleadosPage'
 import { FichajesPage }          from './panel/FichajesPage'
 import { PanelLoginPage }        from './panel/PanelLoginPage'
+import { VacacionesPage }          from './panel/VacacionesPage'
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
       { path: 'dashboard',    element: <DashboardPage /> },
       { path: 'empleados',    element: <EmpleadosPage /> },
       { path: 'fichajes',     element: <FichajesPage /> },
+      { path: 'vacaciones',   element: <VacacionesPage /> },
     ],
   },
 ])

@@ -29,6 +29,7 @@ export function PanelLayout() {
     { to: 'dashboard', label: 'Dashboard',  icon: '▦' },
     ...(isAdmin() ? [{ to: 'empleados', label: 'Empleados', icon: '👥' }] : []),
     { to: 'fichajes', label: 'Fichajes',   icon: '🕐' },
+    ...(isAdmin() ? [{ to: 'vacaciones', label: 'Vacaciones', icon: '🏖️' }] : []),
   ]
 
   return (
