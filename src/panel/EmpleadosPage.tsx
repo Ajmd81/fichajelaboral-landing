@@ -43,23 +43,43 @@ export function EmpleadosPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => {
+    void cargar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleCrear(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Validación frontend del teléfono
+    if (form.role === 'EMPLOYEE' || form.telefono.trim()) {
+      const telLimpio = form.telefono.replace(/[\s\-()]/g, '').replace(/^\+34/, '').replace(/^0034/, '')
+      if (form.role === 'EMPLOYEE' && !telLimpio) {
+        setError('El teléfono es obligatorio para los empleados (será su acceso a la app móvil).')
+        return
+      }
+      if (telLimpio && !/^[67]\d{8}$/.test(telLimpio)) {
+        setError('Teléfono inválido. Debe ser un móvil español (9 dígitos comenzando por 6 o 7).')
+        return
+      }
+    }
+
     setSaving(true)
     try {
       await api.post('/empleados', form)
       setModal(false)
       setForm(EMPTY_FORM)
       await cargar()
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? ''
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { message?: string } } }
+      const msg = e?.response?.data?.message ?? ''
       if (msg.includes('DEMO_LIMITE_EMPLEADOS')) {
         setError('Has alcanzado el límite de empleados del plan demo.')
-      } else if (err?.response?.status === 409) {
-        setError('Ya existe un usuario con ese email en esta empresa.')
+      } else if (msg) {
+        setError(msg)
+      } else if (e?.response?.status === 409) {
+        setError('Ya existe un usuario con ese email o teléfono en esta empresa.')
       } else {
         setError('Error al crear el empleado. Inténtalo de nuevo.')
       }
@@ -81,7 +101,7 @@ export function EmpleadosPage() {
   }
 
   const filtered = empleados.filter(e =>
-    (e.nombre + ' ' + e.apellido + ' ' + (e.dni ?? '') + ' ' + e.username)
+    (e.nombre + ' ' + e.apellido + ' ' + (e.dni ?? '') + ' ' + e.username + ' ' + (e.telefono ?? ''))
       .toLowerCase().includes(search.toLowerCase())
   )
 
@@ -105,7 +125,7 @@ export function EmpleadosPage() {
       {/* Buscador */}
       <div className="mb-6">
         <input type="text" className="input-field max-w-sm"
-          placeholder="Buscar por nombre, DNI o email…"
+          placeholder="Buscar por nombre, DNI, email o teléfono…"
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
@@ -127,6 +147,7 @@ export function EmpleadosPage() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="text-left px-6 py-3 text-xs text-gray-400 font-medium uppercase tracking-wide">Empleado</th>
+                  <th className="text-left px-6 py-3 text-xs text-gray-400 font-medium uppercase tracking-wide">Teléfono</th>
                   <th className="text-left px-6 py-3 text-xs text-gray-400 font-medium uppercase tracking-wide">Email</th>
                   <th className="text-left px-6 py-3 text-xs text-gray-400 font-medium uppercase tracking-wide">Rol</th>
                   <th className="text-left px-6 py-3 text-xs text-gray-400 font-medium uppercase tracking-wide">Dispositivo</th>
@@ -149,7 +170,14 @@ export function EmpleadosPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">{e.username}</td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {e.telefono ? (
+                        <span className="font-mono text-xs">{e.telefono}</span>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 text-xs">{e.username}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium
                         ${e.role === 'ADMIN' ? 'bg-blue-50 text-blue-primary' : 'bg-gray-100 text-gray-600'}`}>
@@ -229,27 +257,41 @@ export function EmpleadosPage() {
                     value={form.dni} onChange={e => update('dni', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Teléfono</label>
-                  <input type="tel" className="input-field" placeholder="600000000"
-                    value={form.telefono} onChange={e => update('telefono', e.target.value)} />
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Rol</label>
+                  <select className="input-field" value={form.role} onChange={e => update('role', e.target.value)}>
+                    <option value="EMPLOYEE">Empleado</option>
+                    <option value="ADMIN">Administrador</option>
+                  </select>
                 </div>
               </div>
+
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Email (usuario de acceso)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Teléfono móvil {form.role === 'EMPLOYEE' && <span className="text-red-primary">*</span>}
+                </label>
+                <input type="tel" className="input-field" placeholder="600 123 456"
+                  value={form.telefono} onChange={e => update('telefono', e.target.value)}
+                  required={form.role === 'EMPLOYEE'} />
+                {form.role === 'EMPLOYEE' && (
+                  <p className="text-[10px] text-gray-400 mt-1">El empleado iniciará sesión en la app móvil con este número.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Email {form.role === 'ADMIN' ? <span className="text-red-primary">*</span> : <span className="text-gray-400 font-normal">(opcional)</span>}
+                </label>
                 <input type="email" className="input-field" placeholder="juan@tuempresa.com"
                   value={form.username} onChange={e => update('username', e.target.value)} required />
+                {form.role === 'ADMIN' && (
+                  <p className="text-[10px] text-gray-400 mt-1">El administrador inicia sesión en el panel web con este email.</p>
+                )}
               </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">Contraseña inicial</label>
                 <input type="password" className="input-field" placeholder="Mínimo 6 caracteres"
                   value={form.password} onChange={e => update('password', e.target.value)} required />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Rol</label>
-                <select className="input-field" value={form.role} onChange={e => update('role', e.target.value)}>
-                  <option value="EMPLOYEE">Empleado</option>
-                  <option value="ADMIN">Administrador</option>
-                </select>
               </div>
 
               {error && (

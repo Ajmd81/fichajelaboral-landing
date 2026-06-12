@@ -7,19 +7,35 @@ import { router } from 'expo-router'
 import { login } from '../services/auth'
 
 export default function LoginScreen() {
-  const [form, setForm] = useState({ empresaSlug: '', username: '', password: '' })
+  const [form, setForm] = useState({ empresaSlug: '', telefono: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function normalizarTelefono(input: string): string {
+    return input.replace(/[\s\-()]/g, '').replace(/^\+34/, '').replace(/^0034/, '')
+  }
+
+  function esTelefonoValido(tel: string): boolean {
+    return /^[67]\d{8}$/.test(tel)
+  }
+
   async function handleLogin() {
     setError('')
-    if (!form.empresaSlug || !form.username || !form.password) {
+
+    if (!form.empresaSlug || !form.telefono || !form.password) {
       setError('Rellena todos los campos.')
       return
     }
+
+    const tel = normalizarTelefono(form.telefono)
+    if (!esTelefonoValido(tel)) {
+      setError('Teléfono inválido.\nDebe ser un móvil español (9 dígitos comenzando por 6 o 7).')
+      return
+    }
+
     setLoading(true)
     try {
-      await login(form.empresaSlug, form.username, form.password)
+      await login(form.empresaSlug, tel, form.password)
       router.replace('/(tabs)/fichaje')
     } catch (err: unknown) {
       const e = err as {
@@ -46,9 +62,8 @@ export default function LoginScreen() {
       } else if (status === 403 && (msg.includes('DEVICE_NOT_AUTHORIZED') || msg.toLowerCase().includes('dispositivo'))) {
         setError('Este usuario ya está vinculado a otro dispositivo.\nContacta con el administrador.')
       } else if (status === 401) {
-        setError('Usuario o contraseña incorrectos.')
+        setError('Teléfono o contraseña incorrectos.')
       } else if (msg) {
-        // Cualquier otro error: mostrar el mensaje del backend
         setError(msg)
       } else {
         setError('Error inesperado (código ' + status + ').\nInténtalo de nuevo.')
@@ -67,22 +82,28 @@ export default function LoginScreen() {
             <Text style={s.logoIcon}>🕐</Text>
           </View>
           <Text style={s.title}>FichajesLaborales</Text>
-          <Text style={s.subtitle}>Accede con tu cuenta</Text>
+          <Text style={s.subtitle}>Accede con tu teléfono móvil</Text>
         </View>
 
         {/* Formulario */}
         <View style={s.card}>
-          <Text style={s.label}>Empresa (slug)</Text>
+          <Text style={s.label}>Empresa</Text>
           <TextInput style={s.input} placeholder="mi-empresa"
             autoCapitalize="none" autoCorrect={false}
             value={form.empresaSlug}
             onChangeText={v => setForm(p => ({ ...p, empresaSlug: v }))} />
 
-          <Text style={s.label}>Email</Text>
-          <TextInput style={s.input} placeholder="admin@tuempresa.com"
-            autoCapitalize="none" autoCorrect={false}
-            value={form.username}
-            onChangeText={v => setForm(p => ({ ...p, username: v }))} />
+          <Text style={s.label}>Teléfono móvil</Text>
+          <TextInput
+            style={s.input}
+            placeholder="600 123 456"
+            keyboardType="phone-pad"
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={15}
+            value={form.telefono}
+            onChangeText={v => setForm(p => ({ ...p, telefono: v }))} />
+          <Text style={s.helper}>Móvil español de 9 dígitos (sin prefijo)</Text>
 
           <Text style={s.label}>Contraseña</Text>
           <TextInput style={s.input} placeholder="••••••"
@@ -113,6 +134,7 @@ const s = StyleSheet.create({
   subtitle: { fontSize: 14, color: '#5A6475', marginTop: 4 },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 24, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 12, elevation: 4 },
   label: { fontSize: 13, fontWeight: '600', color: '#5A6475', marginBottom: 5, marginTop: 14 },
+  helper: { fontSize: 11, color: '#9BA5B4', marginTop: 4 },
   input: { borderWidth: 1.5, borderColor: '#DDE2EA', borderRadius: 10, padding: 12, fontSize: 15, backgroundColor: '#F7F9FC' },
   errorBox: { backgroundColor: '#FEF0F0', borderRadius: 8, padding: 12, marginTop: 14, borderLeftWidth: 3, borderLeftColor: '#D2514E' },
   errorText: { color: '#D2514E', fontSize: 13, lineHeight: 18 },
