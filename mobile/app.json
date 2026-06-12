@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "FichajesLaborales",
+    "slug": "fichajelaboral-mobile",
+    "version": "1.0.0",
+    "scheme": "fichajelaboral",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#00923C"
+      },
+      "package": "com.fichajelaboral.app",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.fichajelaboral.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "FichajesLaborales necesita tu ubicación para registrar los fichajes con GPS verificado."
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Se usa para registrar tu ubicación al fichar."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "635d6a41-56b4-4dc4-aace-b440b5a06ff9"
+      }
+    },
+    "owner": "bruce1981"
+  }
+}

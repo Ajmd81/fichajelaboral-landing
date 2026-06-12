@@ -1,0 +1,22 @@
+{
+  "cli": { "version": ">= 16.0.0" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "android": { "buildType": "apk" },
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://horario-control-demo-production.up.railway.app/api"
+      }
+    },
+    "production": {
+      "android": { "buildType": "app-bundle" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://horario-control-demo-production.up.railway.app/api"
+      }
+    }
+  }
+}
