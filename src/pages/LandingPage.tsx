@@ -171,12 +171,15 @@ export function LandingPage() {
           </div>
 
           {[
-            { icon: '📱', color: 'bg-blue-50', title: 'App móvil nativa',       desc: 'iOS y Android. Un toque para fichar. La app solicita la ubicación en el momento del fichaje — sin ubicación, no hay fichaje.' },
-            { icon: '⏱️', color: 'bg-green-light', title: 'Panel en tiempo real', desc: 'Ve en directo quién está trabajando, desde dónde fichó, quién ha llegado tarde y quién aún no ha registrado entrada.' },
-            { icon: '📊', color: 'bg-blue-50', title: 'Informes exportables',    desc: 'Exporta horas y ubicaciones de cada empleado en PDF o Excel para RRHH, nóminas o auditorías laborales.' },
-            { icon: '👥', color: 'bg-green-light', title: 'Multi-empleado',       desc: 'Gestiona equipos de cualquier tamaño. Roles diferenciados: administrador, responsable y empleado.' },
-            { icon: '🔔', color: 'bg-red-50',  title: 'Alertas de incidencia',   desc: 'Notificaciones automáticas cuando un empleado llega tarde, supera horas o no cierra su jornada.' },
-            { icon: '🔒', color: 'bg-blue-50', title: 'Multi-empresa seguro',    desc: 'Cada empresa tiene su propio espacio aislado. Tus datos son solo tuyos, cifrados y en Europa.' },
+            { icon: '📱', color: 'bg-blue-50',    title: 'App móvil nativa',          desc: 'iOS y Android. Un toque para fichar. La app solicita la ubicación en el momento del fichaje — sin ubicación, no hay fichaje.' },
+            { icon: '⏱️', color: 'bg-green-light', title: 'Panel en tiempo real',     desc: 'Ve en directo quién está trabajando, desde dónde fichó, quién ha llegado tarde y quién aún no ha registrado entrada.' },
+            { icon: '🔐', color: 'bg-blue-50',    title: 'Sellado hash inmutable',    desc: 'Cada fichaje se encadena con un hash SHA-256. Las manipulaciones directas en la base de datos son detectables — preparado para inspección.' },
+            { icon: '📜', color: 'bg-red-50',     title: 'Audit log de modificaciones', desc: 'Toda corrección de fichaje exige motivo y queda registrada con autor, fecha y hash. Cumple Ley Control Horario 2026.' },
+            { icon: '☕', color: 'bg-green-light', title: 'Pausas y categorías',      desc: 'Registra descansos, comidas e interrupciones. Categoriza cada fichaje: jornada, desplazamiento, visita comercial o formación.' },
+            { icon: '📊', color: 'bg-blue-50',    title: 'Informes exportables',     desc: 'Exporta PDF oficial conforme Art. 34.9 ET o CSV para nóminas. Cabecera, datos, horas, ubicaciones y hashes — listo para inspección.' },
+            { icon: '🏖️', color: 'bg-green-light', title: 'Vacaciones integradas',    desc: 'Los empleados solicitan desde la app. El admin aprueba o rechaza con motivo. Los días aprobados bloquean fichajes automáticamente.' },
+            { icon: '💰', color: 'bg-blue-50',    title: 'Extras con firma digital',  desc: 'El cómputo automático separa diurnas y nocturnas. El empleado firma cómo se compensan: en nómina o con descanso.' },
+            { icon: '🔒', color: 'bg-green-light', title: 'Multi-empresa seguro',    desc: 'Cada empresa tiene su propio espacio aislado. Tus datos son solo tuyos, cifrados y en Europa.' },
           ].map(({ icon, color, title, desc }) => (
             <div key={title}
               className="border border-gray-200 rounded-2xl p-8 hover:border-green-primary
@@ -214,21 +217,41 @@ export function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-24 px-8 max-w-5xl mx-auto text-center">
+      <section id="pricing" className="py-24 px-8 max-w-6xl mx-auto text-center">
         <p className="section-tag mb-2">Precios</p>
-        <h2 className="section-title mb-3">Un precio justo, sin sorpresas</h2>
-        <p className="section-sub mb-14 max-w-md mx-auto">Empieza gratis. Activa la licencia cuando estés convencido.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {/* Free */}
-          <div className="border border-gray-200 rounded-2xl p-10 text-left hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-            <h3 className="font-display text-xl text-gray-900 mb-1">Prueba gratuita</h3>
-            <p className="text-xs text-gray-400 mb-5">Sin tarjeta · Sin compromiso</p>
-            <p className="font-display text-5xl text-gray-900 leading-none mb-1">0<sup className="text-2xl">€</sup></p>
-            <p className="text-xs text-gray-400 mb-8">durante 15 días</p>
-            <ul className="space-y-3 mb-8">
-              {['Empleados ilimitados','App iOS y Android','Panel web completo','Soporte por email'].map(f => (
-                <li key={f} className="text-sm text-gray-600 flex items-center gap-2">
-                  <span className="text-green-primary font-bold">✓</span> {f}
+        <h2 className="section-title mb-3">Un plan para cada tamaño de equipo</h2>
+        <p className="section-sub mb-4 max-w-md mx-auto">
+          Empieza con <strong className="text-green-primary font-medium">15 días gratis</strong>, sin tarjeta. Activa la licencia cuando estés convencido.
+        </p>
+        <p className="text-xs text-gray-400 mb-12">Todos los planes incluyen <strong className="text-gray-600 font-medium">cumplimiento Ley Control Horario 2026</strong></p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+
+          {/* ── Básico ── */}
+          <div className="border border-gray-200 rounded-2xl p-8 text-left hover:-translate-y-1 hover:shadow-md transition-all duration-200 bg-white">
+            <h3 className="font-display text-xl text-gray-900 mb-1">Básico</h3>
+            <p className="text-xs text-gray-400 mb-5">1 a 15 empleados</p>
+            <p className="font-display text-5xl text-gray-900 leading-none mb-1">
+              <sup className="text-2xl">€</sup>29
+              <span className="text-base font-normal text-gray-400">/mes</span>
+            </p>
+            <p className="text-xs text-gray-500 mb-8">facturado anualmente · 348 €/año</p>
+            <ul className="space-y-2.5 mb-8 text-sm text-gray-600">
+              {[
+                'Hasta 15 empleados',
+                'App iOS y Android',
+                'Panel web completo',
+                'Geolocalización GPS',
+                'Cadena hash SHA-256',
+                'Exportación PDF y CSV',
+                'Audit log de modificaciones',
+                'Pausas y categorías',
+                'Gestión de vacaciones',
+                'Soporte por email',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="text-green-primary font-bold flex-shrink-0">✓</span>
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>
@@ -239,25 +262,35 @@ export function LandingPage() {
             </Link>
           </div>
 
-          {/* Pro */}
-          <div className="relative border-2 border-green-primary rounded-2xl p-10 text-left
+          {/* ── Profesional (destacado) ── */}
+          <div className="relative border-2 border-green-primary rounded-2xl p-8 text-left
                           bg-green-hero hover:-translate-y-1 hover:shadow-md transition-all duration-200">
             <span className="absolute -top-3.5 left-1/2 -translate-x-1/2
-                             bg-green-primary text-white text-[10px] font-bold
-                             px-4 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">
+                            bg-green-primary text-white text-[10px] font-bold
+                            px-4 py-1 rounded-full uppercase tracking-wide whitespace-nowrap">
               Más popular
             </span>
-            <h3 className="font-display text-xl text-gray-900 mb-1">Licencia anual</h3>
-            <p className="text-xs text-gray-400 mb-5">Todo incluido · Factura disponible</p>
+            <h3 className="font-display text-xl text-gray-900 mb-1">Profesional</h3>
+            <p className="text-xs text-gray-400 mb-5">16 a 50 empleados</p>
             <p className="font-display text-5xl text-gray-900 leading-none mb-1">
-              <sup className="text-2xl">€</sup>29
-              <span className="text-base font-normal text-[#B8860B]">/mes</span>
+              <sup className="text-2xl">€</sup>39
+              <span className="text-base font-normal text-gray-400">/mes</span>
             </p>
-            <p className="text-xs text-gray-600 mb-8">facturado anualmente · 348 €/año</p>
-            <ul className="space-y-3 mb-8">
-              {['Todo lo del plan gratuito','Exportación PDF y Excel','Alertas e incidencias','Soporte prioritario','Actualizaciones incluidas'].map(f => (
-                <li key={f} className="text-sm text-gray-600 flex items-center gap-2">
-                  <span className="text-green-primary font-bold">✓</span> {f}
+            <p className="text-xs text-gray-500 mb-8">facturado anualmente · 468 €/año</p>
+            <ul className="space-y-2.5 mb-8 text-sm text-gray-600">
+              {[
+                'Hasta 50 empleados',
+                'Todo lo del plan Básico',
+                'Cómputo horas extras (Art. 35 ET)',
+                'Bloqueo automático 80h anuales',
+                'Compensación firmada digitalmente',
+                'Resumen equipo en tiempo real',
+                'Soporte prioritario',
+                'Actualizaciones incluidas',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="text-green-primary font-bold flex-shrink-0">✓</span>
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>
@@ -267,10 +300,42 @@ export function LandingPage() {
               Activar licencia
             </Link>
           </div>
+
+          {/* ── Ultimate ── */}
+          <div className="border border-gray-200 rounded-2xl p-8 text-left hover:-translate-y-1 hover:shadow-md transition-all duration-200 bg-white">
+            <h3 className="font-display text-xl text-gray-900 mb-1">Ultimate</h3>
+            <p className="text-xs text-gray-400 mb-5">Más de 51 empleados</p>
+            <p className="font-display text-5xl text-gray-900 leading-none mb-1">
+              <sup className="text-2xl">€</sup>49
+              <span className="text-base font-normal text-gray-400">/mes</span>
+            </p>
+            <p className="text-xs text-gray-500 mb-8">facturado anualmente · 588 €/año</p>
+            <ul className="space-y-2.5 mb-8 text-sm text-gray-600">
+              {[
+                'Empleados ilimitados',
+                'Todo lo del plan Profesional',
+                'Multi-sede / multi-centro',
+                'Roles avanzados (RLT incluido)',
+                'API para integraciones',
+                'Soporte telefónico dedicado',
+                'Consultoría personalizada',
+              ].map(f => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="text-green-primary font-bold flex-shrink-0">✓</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/contacto" className="block text-center border border-gray-200 text-gray-900 py-3
+                                            rounded-xl text-sm font-medium hover:border-green-primary
+                                            hover:text-green-primary transition-colors no-underline">
+              Contactar ventas
+            </Link>
+          </div>
         </div>
-        <p className="mt-8 text-xs text-gray-400">
-          ¿Necesitas factura o tienes varias sedes?{' '}
-          <Link to="/contacto" className="text-green-primary no-underline hover:underline">Contáctanos</Link>
+
+        <p className="mt-10 text-xs text-gray-400">
+          Todos los precios sin IVA · Sin permanencia · Cancela cuando quieras
         </p>
       </section>
 
@@ -308,11 +373,13 @@ export function LandingPage() {
       {/* ── FAQ ── */}
       <section id="faq" className="py-24 px-8 max-w-2xl mx-auto">
         <h2 className="section-title text-center mb-12">Preguntas frecuentes</h2>
-        <FaqItem q="¿Puede fichar un empleado por otro?" a="No. Cada fichaje está vinculado a la sesión personal del empleado y registra la ubicación GPS del dispositivo en ese momento. El administrador ve exactamente dónde estaba cada persona al fichar. No existe ninguna forma de que un empleado registre la entrada o salida de otro." />
+        <FaqItem q="¿Cumple con la nueva Ley de Control Horario 2026?" a="Sí, totalmente. FichajesLaborales incorpora todos los requisitos: sellado hash criptográfico SHA-256 inmutable, audit log de modificaciones con motivo obligatorio, registro de pausas, categorías de fichaje, exportación oficial conforme al Art. 34.9 ET y firma digital del empleado para la compensación de horas extras." />
+        <FaqItem q="¿Puede fichar un empleado por otro?" a="No. Cada fichaje está vinculado a la sesión personal del empleado y al dispositivo (device binding único). Si alguien intenta loguearse desde otro móvil, el sistema lo bloquea automáticamente." />
+        <FaqItem q="¿Cómo se detectan las manipulaciones en los registros?" a="Cada fichaje genera un hash SHA-256 que encadena con el del fichaje anterior del mismo empleado. Si alguien modifica un registro directamente en la base de datos, la cadena se rompe y la inspección puede detectarlo. Todas las modificaciones legítimas pasan por el sistema y quedan registradas en el audit log con motivo obligatorio." />
         <FaqItem q="¿Necesito tarjeta de crédito para la prueba?" a="No. La prueba gratuita de 15 días es completamente gratuita y no requiere ningún método de pago. Solo te pedimos un email y el nombre de tu empresa." />
         <FaqItem q="¿Qué pasa cuando terminan los 15 días?" a="Tu cuenta queda en modo limitado: puedes ver los datos pero no registrar nuevos fichajes. En ningún caso se borran tus datos. Cuando actives la licencia, todo vuelve a funcionar al instante." />
-        <FaqItem q="¿Cuántos empleados puedo tener?" a="No hay límite de empleados en ninguno de los planes. Tanto en la prueba gratuita como en la licencia de pago puedes añadir todos los que necesites." />
-        <FaqItem q="¿Es válido para la normativa española de registro de jornada?" a="Sí. FichajesLaborales registra la hora exacta de entrada y salida de cada empleado con sello de tiempo, y permite exportar informes mensuales en formato PDF con todos los datos exigidos por el RDL 8/2019." />
+        <FaqItem q="¿Cómo elijo el plan adecuado?" a="Por número de empleados activos: hasta 15 el plan Básico (29€/mes), hasta 50 el Profesional (39€/mes), más de 51 el Ultimate (49€/mes). Si tu equipo crece, puedes cambiar de plan en cualquier momento sin perder datos." />
+        <FaqItem q="¿El bloqueo automático de las 80h extras anuales es obligatorio?" a="Sí, lo exige el Art. 35.2 ET. Cuando un empleado alcanza las 80 horas extras anuales, FichajesLaborales bloquea automáticamente sus fichajes hasta el siguiente año natural, protegiendo a la empresa de sanciones laborales." />
         <FaqItem q="¿Puedo cancelar cuando quiera?" a="Sí. No hay permanencia ni contrato de fidelización. Puedes cancelar desde tu panel de cliente en cualquier momento." />
       </section>
 
