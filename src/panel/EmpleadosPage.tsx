@@ -32,6 +32,12 @@ export function EmpleadosPage() {
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
 
+  // Reset password modal
+  const [resetTarget,    setResetTarget]    = useState<Empleado | null>(null)
+  const [resetPassword,  setResetPassword]  = useState('')
+  const [resetting,      setResetting]      = useState(false)
+  const [copied,         setCopied]         = useState(false)
+
   function update(field: string, value: string) {
     setForm(p => ({ ...p, [field]: value }))
   }
@@ -52,7 +58,6 @@ export function EmpleadosPage() {
     e.preventDefault()
     setError('')
 
-    // Validación frontend del teléfono
     if (form.role === 'EMPLOYEE' || form.telefono.trim()) {
       const telLimpio = form.telefono.replace(/[\s\-()]/g, '').replace(/^\+34/, '').replace(/^0034/, '')
       if (form.role === 'EMPLOYEE' && !telLimpio) {
@@ -98,6 +103,44 @@ export function EmpleadosPage() {
     if (!confirm('¿Desvincular el dispositivo de este empleado?')) return
     await api.delete('/empleados/' + id + '/dispositivo')
     await cargar()
+  }
+
+  // ── Reset password ──────────────────────────────────────────
+  function abrirResetPassword(emp: Empleado) {
+    setResetTarget(emp)
+    setResetPassword('')
+    setCopied(false)
+  }
+
+  async function confirmarResetPassword() {
+    if (!resetTarget) return
+    setResetting(true)
+    try {
+      const r = await api.post('/empleados/' + resetTarget.id + '/reset-password')
+      setResetPassword(r.data.passwordTemporal)
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      alert('Error al resetear: ' + (e?.response?.data?.message ?? 'desconocido'))
+    } finally {
+      setResetting(false)
+    }
+  }
+
+  async function copiarPassword() {
+    if (!resetPassword) return
+    try {
+      await navigator.clipboard.writeText(resetPassword)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      alert('No se pudo copiar al portapapeles')
+    }
+  }
+
+  function cerrarResetModal() {
+    setResetTarget(null)
+    setResetPassword('')
+    setCopied(false)
   }
 
   const filtered = empleados.filter(e =>
@@ -199,6 +242,14 @@ export function EmpleadosPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
+                        {e.activo && (
+                          <button onClick={() => abrirResetPassword(e)}
+                            className="text-xs text-gray-400 hover:text-blue-primary transition-colors
+                                       bg-transparent border-none cursor-pointer"
+                            title="Resetear contraseña">
+                            🔑
+                          </button>
+                        )}
                         {e.dispositivoVinculado && (
                           <button onClick={() => handleResetDispositivo(e.id)}
                             className="text-xs text-gray-400 hover:text-orange-500 transition-colors
@@ -315,6 +366,79 @@ export function EmpleadosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal resetear contraseña */}
+      {resetTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-display text-xl text-gray-900">Resetear contraseña</h2>
+              <button onClick={cerrarResetModal}
+                className="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer text-xl">
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-5">
+              Empleado: <strong>{resetTarget.nombre} {resetTarget.apellido}</strong>
+            </p>
+
+            {!resetPassword ? (
+              <>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 mb-5">
+                  <p className="text-xs text-yellow-800 leading-relaxed">
+                    Se generará una contraseña temporal nueva. La anterior dejará de funcionar inmediatamente.
+                    Comunícasela al empleado por un canal seguro — solo la verás una vez.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={cerrarResetModal}
+                    className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm
+                               hover:border-gray-300 transition-colors bg-white cursor-pointer">
+                    Cancelar
+                  </button>
+                  <button onClick={confirmarResetPassword} disabled={resetting}
+                    className="flex-1 bg-blue-primary text-white py-2.5 rounded-xl text-sm font-medium
+                               hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed
+                               border-none cursor-pointer">
+                    {resetting ? 'Generando…' : 'Generar nueva contraseña'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-green-light border border-green-primary rounded-xl px-5 py-4 mb-3">
+                  <p className="text-[10px] text-green-dark uppercase tracking-wide mb-2 font-medium">
+                    Contraseña temporal
+                  </p>
+                  <p className="font-mono text-2xl text-gray-900 tracking-wider select-all break-all">
+                    {resetPassword}
+                  </p>
+                </div>
+
+                <p className="text-[10px] text-gray-400 mb-5 italic">
+                  ⚠️ Esta contraseña no se volverá a mostrar. Cópiala ahora y entrégasela al empleado.
+                </p>
+
+                <div className="flex gap-3">
+                  <button onClick={copiarPassword}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors border-none cursor-pointer
+                      ${copied
+                        ? 'bg-green-primary text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    {copied ? '✓ Copiada' : '📋 Copiar al portapapeles'}
+                  </button>
+                  <button onClick={cerrarResetModal}
+                    className="flex-1 bg-green-primary text-white py-2.5 rounded-xl text-sm font-medium
+                               hover:bg-green-dark transition-colors border-none cursor-pointer">
+                    Cerrar
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
