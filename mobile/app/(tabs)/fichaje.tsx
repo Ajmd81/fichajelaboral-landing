@@ -106,7 +106,11 @@ export default function FichajeScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') return null
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
-      return { latitud: loc.coords.latitude, longitud: loc.coords.longitude }
+      return {
+        latitud:  loc.coords.latitude,
+        longitud: loc.coords.longitude,
+        mocked:   loc.mocked === true,    // ← Android lo proporciona, iOS siempre será false
+      }
     } catch {
       return null
     }

@@ -15,6 +15,7 @@ interface Fichaje {
   observaciones?: string
   hashActual?: string
   version?: number
+  mocked?: boolean
 }
 
 interface AuditoriaItem {
@@ -55,7 +56,7 @@ export function FichajesPage() {
   const [fichajes,  setFichajes]  = useState<Fichaje[]>([])
   const [empleados, setEmpleados] = useState<Empleado[]>([])
   const [loading,   setLoading]   = useState(true)
-  const [filtro,    setFiltro]    = useState<'todos' | 'abiertos' | 'cerrados'>('todos')
+  const [filtro,    setFiltro]    = useState<'todos' | 'abiertos' | 'cerrados' | 'fakegps'>('todos')
 
   // Edit modal
   const [editFichaje, setEditFichaje] = useState<Fichaje | null>(null)
@@ -170,9 +171,13 @@ export function FichajesPage() {
     }
   }
 
-  const filtered = fichajes.filter(f =>
-    filtro === 'todos' || (filtro === 'abiertos' ? !f.cerrado : f.cerrado)
-  )
+  const filtered = fichajes.filter(f => {
+    if (filtro === 'todos')    return true
+    if (filtro === 'abiertos') return !f.cerrado
+    if (filtro === 'cerrados') return f.cerrado
+    if (filtro === 'fakegps')  return f.mocked === true
+    return true
+  })
 
   return (
     <div>
@@ -229,13 +234,15 @@ export function FichajesPage() {
 
       {/* Filtros */}
       <div className="flex gap-2 mb-6">
-        {(['todos','abiertos','cerrados'] as const).map(f => (
+        {(['todos','abiertos','cerrados','fakegps'] as const).map(f => (
           <button key={f} onClick={() => setFiltro(f)}
             className={`px-4 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer
               ${filtro === f
-                ? 'bg-green-primary text-white border-green-primary'
+                ? f === 'fakegps'
+                ? 'bg-red-primary text-white border-red-primary'
+                : 'bg-green-primary text-white border-green-primary'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-green-primary hover:text-green-primary'}`}>
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'fakegps' ? '⚠️ Fake GPS' : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
@@ -274,11 +281,19 @@ export function FichajesPage() {
                     </td>
                     <td className="px-4 py-3">
                       {f.latitud != null && f.longitud != null ? (
-                        <a href={'https://maps.google.com/?q=' + f.latitud + ',' + f.longitud}
-                          target="_blank" rel="noreferrer"
-                          className="text-xs text-green-primary no-underline hover:underline">
-                          📍 Ver mapa
-                        </a>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <a href={'https://maps.google.com/?q=' + f.latitud + ',' + f.longitud}
+                            target="_blank" rel="noreferrer"
+                            className="text-xs text-green-primary no-underline hover:underline">
+                            📍 Ver mapa
+                          </a>
+                          {f.mocked && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-primary font-semibold uppercase tracking-wide"
+                              title="Ubicación generada por una app de Fake GPS — revisar este fichaje">
+                              ⚠️ Fake GPS
+                            </span>
+                          )}
+                        </div>
                       ) : <span className="text-xs text-gray-400">—</span>}
                     </td>
                     <td className="px-4 py-3">

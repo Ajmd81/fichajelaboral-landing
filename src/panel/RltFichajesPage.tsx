@@ -11,6 +11,7 @@ interface FichajeAnonimo {
   version: number
   modificado: boolean
   conGeolocalizacion: boolean
+  mocked?: boolean
 }
 
 const MESES = [
@@ -129,9 +130,19 @@ export function RltFichajesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs">
-                      {f.conGeolocalizacion
-                        ? <span className="text-green-primary">📍 Sí</span>
-                        : <span className="text-gray-300">—</span>}
+                      {f.conGeolocalizacion ? (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-green-primary">📍 Sí</span>
+                          {f.mocked && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-primary font-semibold uppercase"
+                              title="Ubicación simulada (Fake GPS) detectada">
+                              ⚠️ Fake
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium
