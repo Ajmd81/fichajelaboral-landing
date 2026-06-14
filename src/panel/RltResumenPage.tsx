@@ -36,8 +36,6 @@ interface IntegridadResumen {
   cadenaIntegra: boolean
 }
 
-const [integridad, setIntegridad] = useState<IntegridadResumen | null>(null)
-
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -49,6 +47,7 @@ export function RltResumenPage() {
   const [mes,  setMes]  = useState(hoy.getMonth() + 1)
   const [resumen,  setResumen]  = useState<ResumenEmpresa | null>(null)
   const [empleados, setEmpleados] = useState<EmpleadoAnonimo[]>([])
+  const [integridad, setIntegridad] = useState<IntegridadResumen | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState('')
 
