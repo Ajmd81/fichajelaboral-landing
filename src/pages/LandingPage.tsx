@@ -180,6 +180,7 @@ export function LandingPage() {
             { icon: '🏖️', color: 'bg-green-light', title: 'Vacaciones integradas',    desc: 'Los empleados solicitan desde la app. El admin aprueba o rechaza con motivo. Los días aprobados bloquean fichajes automáticamente.' },
             { icon: '💰', color: 'bg-blue-50',    title: 'Extras con firma digital',  desc: 'El cómputo automático separa diurnas y nocturnas. El empleado firma cómo se compensan: en nómina o con descanso.' },
             { icon: '🔒', color: 'bg-green-light', title: 'Multi-empresa seguro',    desc: 'Cada empresa tiene su propio espacio aislado. Tus datos son solo tuyos, cifrados y en Europa.' },
+            { icon: '🛡️', color: 'bg-purple-50',  title: 'Acceso RLT anonimizado',  desc: 'Los representantes legales pueden supervisar el cumplimiento horario sin acceder a datos personales. Cada empleado se identifica solo con un código (EMP-001, EMP-002…). Cumple Ley 2026 y RGPD.' },
           ].map(({ icon, color, title, desc }) => (
             <div key={title}
               className="border border-gray-200 rounded-2xl p-8 hover:border-green-primary
@@ -248,6 +249,7 @@ export function LandingPage() {
                 'Pausas y categorías',
                 'Gestión de vacaciones',
                 'Soporte por email',
+                'Rol RLT con vista anonimizada',
               ].map(f => (
                 <li key={f} className="flex items-start gap-2">
                   <span className="text-green-primary font-bold flex-shrink-0">✓</span>
@@ -315,7 +317,7 @@ export function LandingPage() {
                 'Empleados ilimitados',
                 'Todo lo del plan Profesional',
                 'Multi-sede / multi-centro',
-                'Roles avanzados (RLT incluido)',
+                'Roles avanzados (RLT con vista anonimizada)',
                 'API para integraciones',
                 'Soporte telefónico dedicado',
                 'Consultoría personalizada',
@@ -381,6 +383,7 @@ export function LandingPage() {
         <FaqItem q="¿Cómo elijo el plan adecuado?" a="Por número de empleados activos: hasta 15 el plan Básico (29€/mes), hasta 50 el Profesional (39€/mes), más de 51 el Ultimate (49€/mes). Si tu equipo crece, puedes cambiar de plan en cualquier momento sin perder datos." />
         <FaqItem q="¿El bloqueo automático de las 80h extras anuales es obligatorio?" a="Sí, lo exige el Art. 35.2 ET. Cuando un empleado alcanza las 80 horas extras anuales, FichajesLaborales bloquea automáticamente sus fichajes hasta el siguiente año natural, protegiendo a la empresa de sanciones laborales." />
         <FaqItem q="¿Puedo cancelar cuando quiera?" a="Sí. No hay permanencia ni contrato de fidelización. Puedes cancelar desde tu panel de cliente en cualquier momento." />
+        <FaqItem q="¿Pueden los representantes legales de los trabajadores acceder al sistema?" a="Sí. FichajesLaborales incluye un rol específico de Representante Legal de los Trabajadores (RLT) que cumple lo exigido por la Ley de Control Horario 2026: el representante accede a un panel anonimizado donde puede supervisar el cumplimiento laboral (horas trabajadas, extras, vacaciones, modificaciones de fichajes) sin ver nombres, DNI, teléfonos ni ubicaciones GPS exactas. Cada empleado aparece con un código único (EMP-001, EMP-002…) que permite rastrearlo en el tiempo sin identificarlo personalmente." />
       </section>
 
       {/* ── CTA FINAL ── */}
