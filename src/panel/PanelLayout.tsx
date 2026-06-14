@@ -55,6 +55,7 @@ export function PanelLayout() {
           { to: 'computo-equipo',    label: 'Resumen equipo',  icon: '📊' },
           { to: 'computo-empleado',  label: 'Detalle empleado', icon: '👤' },
           { to: 'vacaciones',        label: 'Vacaciones',       icon: '🏖️' },
+          { to: 'integridad',        label: 'Integridad',       icon: '🛡️' },
         ] : []),
       ]
 

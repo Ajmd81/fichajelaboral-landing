@@ -29,6 +29,15 @@ interface EmpleadoAnonimo {
   limiteAnualSuperado: boolean
 }
 
+interface IntegridadResumen {
+  fecha: string
+  totalFichajes: number
+  totalCorruptos: number
+  cadenaIntegra: boolean
+}
+
+const [integridad, setIntegridad] = useState<IntegridadResumen | null>(null)
+
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -47,12 +56,14 @@ export function RltResumenPage() {
     setLoading(true)
     setError('')
     try {
-      const [r, e] = await Promise.all([
+      const [r, e, i] = await Promise.all([
         api.get('/rlt/resumen',   { params: { anio, mes } }),
         api.get('/rlt/empleados', { params: { anio, mes } }),
+        api.get('/verificacion/integridad/resumen'),
       ])
       setResumen(r.data)
       setEmpleados(e.data)
+      setIntegridad(i.data)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setError(e?.response?.data?.message ?? 'Error cargando datos')
@@ -128,6 +139,29 @@ export function RltResumenPage() {
               alert={resumen.fichajesModificados > 5}
             />
           </div>
+
+          {/* Integridad de la cadena hash */}
+        {integridad && (
+        <div className={`rounded-2xl p-5 mb-6 border
+            ${integridad.cadenaIntegra
+            ? 'bg-green-light border-green-primary'
+            : 'bg-red-50 border-red-200'}`}>
+            <div className="flex items-center gap-4 flex-wrap">
+            <div className="text-3xl">{integridad.cadenaIntegra ? '🛡️' : '⚠️'}</div>
+            <div className="flex-1">
+                <p className={`font-display text-lg mb-0.5
+                ${integridad.cadenaIntegra ? 'text-green-primary' : 'text-red-primary'}`}>
+                {integridad.cadenaIntegra
+                    ? 'Cadena hash íntegra'
+                    : integridad.totalCorruptos + ' fichaje' + (integridad.totalCorruptos !== 1 ? 's' : '') + ' manipulado' + (integridad.totalCorruptos !== 1 ? 's' : '') + ' detectado' + (integridad.totalCorruptos !== 1 ? 's' : '')}
+                </p>
+                <p className="text-xs text-gray-700">
+                {integridad.totalFichajes} fichajes verificados · {new Date(integridad.fecha).toLocaleString('es-ES')}
+                </p>
+            </div>
+            </div>
+        </div>
+        )}
 
           {/* Vacaciones */}
           <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">

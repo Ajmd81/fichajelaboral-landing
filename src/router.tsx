@@ -19,6 +19,7 @@ import { ComputoEmpleadoPage }   from './panel/ComputoEmpleadoPage'
 import { RltResumenPage }        from './panel/RltResumenPage'
 import { RltFichajesPage }       from './panel/RltFichajesPage'
 import { RltVacacionesPage }     from './panel/RltVacacionesPage'
+import { IntegridadPage }        from './panel/IntegridadPanel'
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
       { path: 'rlt-resumen',        element: <RltResumenPage /> },
       { path: 'rlt-fichajes',       element: <RltFichajesPage /> },
       { path: 'rlt-vacaciones',     element: <RltVacacionesPage /> },
+      { path: 'integridad',         element: <IntegridadPage /> },
     ],
   },
 ])
