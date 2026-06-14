@@ -19,6 +19,7 @@ function traducirRol(role: string) {
   switch (role) {
     case 'EMPLOYEE': return 'Empleado'
     case 'ADMIN':    return 'Administrador'
+    case 'RLT':      return 'Representante legal de Trabajadores'
     default:         return role
   }
 }
@@ -223,7 +224,9 @@ export function EmpleadosPage() {
                     <td className="px-6 py-4 text-gray-600 text-xs">{e.username}</td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium
-                        ${e.role === 'ADMIN' ? 'bg-blue-50 text-blue-primary' : 'bg-gray-100 text-gray-600'}`}>
+                        ${e.role === 'ADMIN' ? 'bg-blue-50 text-blue-primary'
+                        : e.role === 'RLT'  ? 'bg-purple-50 text-purple-700'
+                        : 'bg-gray-100 text-gray-600'}`}>
                         {traducirRol(e.role)}
                       </span>
                     </td>
@@ -312,6 +315,7 @@ export function EmpleadosPage() {
                   <select className="input-field" value={form.role} onChange={e => update('role', e.target.value)}>
                     <option value="EMPLOYEE">Empleado</option>
                     <option value="ADMIN">Administrador</option>
+                    <option value="RLT">Representante legal de Trabajadores</option>
                   </select>
                 </div>
               </div>
@@ -336,6 +340,9 @@ export function EmpleadosPage() {
                   value={form.username} onChange={e => update('username', e.target.value)} required />
                 {form.role === 'ADMIN' && (
                   <p className="text-[10px] text-gray-400 mt-1">El administrador inicia sesión en el panel web con este email.</p>
+                )}
+                {form.role === 'RLT' && (
+                  <p className="text-[10px] text-gray-400 mt-1">El representante legal accederá al panel web con este email (vista anonimizada).</p>
                 )}
               </div>
 

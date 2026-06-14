@@ -1,22 +1,37 @@
 import { useEffect, useState } from 'react'
-import { Outlet, NavLink, useNavigate, useParams } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { getSession, logout, isAdmin } from '../services/auth'
 import { useDemoStatus } from '../hooks/useDemoStatus'
 
 export function PanelLayout() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const session  = getSession()
   const { isDemo, diasRestantes, diasTotales } = useDemoStatus()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const isRlt = session?.role === 'RLT'
 
   useEffect(() => {
     if (!session) { navigate('/' + slug + '/login'); return }
     if (session.empresaSlug !== slug) {
       logout()
       navigate('/' + slug + '/login')
+      return
     }
-  }, [slug])
+    // RLT no puede entrar al dashboard / rutas de admin → redirige a su resumen
+    if (isRlt) {
+      const path = location.pathname.replace('/' + slug, '').replace(/^\//, '')
+      const rutasPermitidas = ['', 'rlt-resumen', 'rlt-fichajes', 'rlt-vacaciones']
+      if (!rutasPermitidas.includes(path)) {
+        navigate('/' + slug + '/rlt-resumen', { replace: true })
+      } else if (path === '') {
+        navigate('/' + slug + '/rlt-resumen', { replace: true })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, location.pathname])
 
   function handleLogout() {
     logout()
@@ -25,16 +40,23 @@ export function PanelLayout() {
 
   const pct = diasTotales ? Math.round((diasRestantes! / diasTotales) * 100) : 0
 
-  const navItems = [
-    { to: 'dashboard', label: 'Dashboard',  icon: '▦' },
-    ...(isAdmin() ? [{ to: 'empleados', label: 'Empleados', icon: '👥' }] : []),
-    { to: 'fichajes', label: 'Fichajes',   icon: '🕐' },
-    ...(isAdmin() ? [
-      { to: 'computo-equipo',    label: 'Resumen equipo',  icon: '📊' },
-      { to: 'computo-empleado',  label: 'Detalle empleado', icon: '👤' },
-      { to: 'vacaciones',        label: 'Vacaciones',       icon: '🏖️' },
-    ] : []),
-  ]
+  // ── Items del sidebar según el rol ──────────────────────────
+  const navItems = isRlt
+    ? [
+        { to: 'rlt-resumen',    label: 'Resumen empresa',    icon: '📊' },
+        { to: 'rlt-fichajes',   label: 'Fichajes anónimos',  icon: '🕐' },
+        { to: 'rlt-vacaciones', label: 'Vacaciones anónimas', icon: '🏖️' },
+      ]
+    : [
+        { to: 'dashboard', label: 'Dashboard',  icon: '▦' },
+        ...(isAdmin() ? [{ to: 'empleados', label: 'Empleados', icon: '👥' }] : []),
+        { to: 'fichajes', label: 'Fichajes',   icon: '🕐' },
+        ...(isAdmin() ? [
+          { to: 'computo-equipo',    label: 'Resumen equipo',  icon: '📊' },
+          { to: 'computo-empleado',  label: 'Detalle empleado', icon: '👤' },
+          { to: 'vacaciones',        label: 'Vacaciones',       icon: '🏖️' },
+        ] : []),
+      ]
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -57,8 +79,18 @@ export function PanelLayout() {
           <p className="text-sm font-medium text-gray-900 truncate">{session?.empresaNombre}</p>
         </div>
 
-        {/* Demo banner */}
-        {isDemo && (
+        {/* Aviso RLT */}
+        {isRlt && (
+          <div className="mx-3 mt-3 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2.5">
+            <p className="text-xs font-medium text-purple-700 mb-0.5">🔒 Vista anonimizada</p>
+            <p className="text-[10px] text-purple-600 leading-snug">
+              Acceso como Representante Legal. Los datos personales están protegidos.
+            </p>
+          </div>
+        )}
+
+        {/* Demo banner (solo admin/empleado) */}
+        {!isRlt && isDemo && (
           <div className="mx-3 mt-3 bg-green-light rounded-xl px-3 py-2.5">
             <p className="text-xs font-medium text-green-dark mb-1">
               Modo Demo · {diasRestantes}d restantes
@@ -97,13 +129,15 @@ export function PanelLayout() {
         {/* Footer sidebar */}
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-green-light flex items-center justify-center
-                            text-green-primary text-xs font-display">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-display
+                            ${isRlt ? 'bg-purple-100 text-purple-700' : 'bg-green-light text-green-primary'}`}>
               {session?.username?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-900 truncate">{session?.username}</p>
-              <p className="text-[10px] text-gray-400">{session?.role}</p>
+              <p className="text-[10px] text-gray-400">
+                {session?.role === 'RLT' ? 'Repr. legal trab.' : session?.role}
+              </p>
             </div>
           </div>
           <button

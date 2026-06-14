@@ -14,8 +14,11 @@ import { EmpleadosPage }         from './panel/EmpleadosPage'
 import { FichajesPage }          from './panel/FichajesPage'
 import { PanelLoginPage }        from './panel/PanelLoginPage'
 import { VacacionesPage }        from './panel/VacacionesPage'
-import { ComputoEquipoPage }    from './panel/ComputoEquipoPage'
-import { ComputoEmpleadoPage }  from './panel/ComputoEmpleadoPage'
+import { ComputoEquipoPage }     from './panel/ComputoEquipoPage'
+import { ComputoEmpleadoPage }   from './panel/ComputoEmpleadoPage'
+import { RltResumenPage }        from './panel/RltResumenPage'
+import { RltFichajesPage }       from './panel/RltFichajesPage'
+import { RltVacacionesPage }     from './panel/RltVacacionesPage'
 
 export const router = createBrowserRouter([
   {
@@ -39,13 +42,17 @@ export const router = createBrowserRouter([
     path: '/:slug',
     element: <PanelLayout />,
     children: [
-      { index: true,          element: <DashboardPage /> },
-      { path: 'dashboard',    element: <DashboardPage /> },
-      { path: 'empleados',    element: <EmpleadosPage /> },
-      { path: 'fichajes',     element: <FichajesPage /> },
-      { path: 'vacaciones',   element: <VacacionesPage /> },
-      { path: 'computo-equipo',   element: <ComputoEquipoPage /> },
+      { index: true,                element: <DashboardPage /> },
+      { path: 'dashboard',          element: <DashboardPage /> },
+      { path: 'empleados',          element: <EmpleadosPage /> },
+      { path: 'fichajes',           element: <FichajesPage /> },
+      { path: 'vacaciones',         element: <VacacionesPage /> },
+      { path: 'computo-equipo',     element: <ComputoEquipoPage /> },
       { path: 'computo-empleado',   element: <ComputoEmpleadoPage /> },
+      // RLT
+      { path: 'rlt-resumen',        element: <RltResumenPage /> },
+      { path: 'rlt-fichajes',       element: <RltFichajesPage /> },
+      { path: 'rlt-vacaciones',     element: <RltVacacionesPage /> },
     ],
   },
 ])

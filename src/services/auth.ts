@@ -74,6 +74,7 @@ export function getSession(): Session | null {
 
 export function isAdmin()    { return localStorage.getItem('role') === 'ADMIN' }
 export function isEmployee() { return localStorage.getItem('role') === 'EMPLOYEE' }
+export function isRLT()      { return localStorage.getItem('role') === 'RLT' }
 
 export function requireAuth(slug: string): boolean {
   const session = getSession()
