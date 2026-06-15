@@ -56,6 +56,7 @@ export function PanelLayout() {
           { to: 'computo-empleado',  label: 'Detalle empleado', icon: '👤' },
           { to: 'vacaciones',        label: 'Vacaciones',       icon: '🏖️' },
           { to: 'integridad',        label: 'Integridad',       icon: '🛡️' },
+          { to: 'licencia',          label: 'Licencia',         icon: '💳' },
         ] : []),
       ]
 
@@ -101,7 +102,7 @@ export function PanelLayout() {
                 style={{ width: pct + '%' }} />
             </div>
             <button
-              onClick={() => navigate('/contacto')}
+              onClick={() => navigate('/' + slug + '/licencia')}
               className="mt-2 w-full text-[10px] font-medium text-white bg-green-primary
                          rounded-lg py-1.5 border-none cursor-pointer hover:bg-green-dark transition-colors">
               Activar licencia →
