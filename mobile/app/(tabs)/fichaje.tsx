@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet,
   ActivityIndicator, Alert, ScrollView, RefreshControl, Modal,
 } from 'react-native'
 import * as Location from 'expo-location'
 import { api } from '../../services/api'
+import {
+  encolar, obtenerCola, sincronizar, contarPendientes,
+  nuevoClientId, isoNow, AccionPendiente,
+} from '../../services/offline'
+import { useNetwork } from '../../hooks/useNetwork'
 
 interface FichajeActivo {
   id: number
@@ -38,20 +43,21 @@ const TIPOS_PAUSA: { val: TipoPausa; label: string; emoji: string }[] = [
 ]
 
 export default function FichajeScreen() {
-  const [fichajeActivo, setFichajeActivo] = useState<FichajeActivo | null>(null)
-  const [pausaActiva,   setPausaActiva]   = useState<PausaActiva | null>(null)
-  const [loading,       setLoading]       = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [refreshing,    setRefreshing]    = useState(false)
-  const [tiempo,        setTiempo]        = useState('')
-  const [hora,          setHora]          = useState('')
+  const online = useNetwork()
 
-  // Modal selector de tipo de fichaje
+  const [fichajeActivo,  setFichajeActivo]  = useState<FichajeActivo | null>(null)
+  const [pausaActiva,    setPausaActiva]    = useState<PausaActiva | null>(null)
+  const [colaPendientes, setColaPendientes] = useState<AccionPendiente[]>([])
+  const [loading,        setLoading]        = useState(true)
+  const [actionLoading,  setActionLoading]  = useState(false)
+  const [refreshing,     setRefreshing]     = useState(false)
+  const [tiempo,         setTiempo]         = useState('')
+  const [hora,           setHora]           = useState('')
+
   const [modalTipoFichaje, setModalTipoFichaje] = useState(false)
-  // Modal selector de tipo de pausa
-  const [modalTipoPausa, setModalTipoPausa] = useState(false)
+  const [modalTipoPausa,   setModalTipoPausa]   = useState(false)
 
-  // Reloj en tiempo real
+  // Reloj
   useEffect(() => {
     const tick = () => {
       const now = new Date()
@@ -74,32 +80,59 @@ export default function FichajeScreen() {
     return () => clearInterval(id)
   }, [fichajeActivo, pausaActiva])
 
-  async function cargar() {
-    try {
-      try {
-        const { data } = await api.get('/fichajes/activo')
-        setFichajeActivo(data)
-      } catch (err: unknown) {
-        const e = err as { response?: { status?: number } }
-        if (e?.response?.status === 404) setFichajeActivo(null)
-      }
+  // ── Estado local: leer cola offline ──
+  const refrescarCola = useCallback(async () => {
+    setColaPendientes(await obtenerCola())
+  }, [])
 
+  // ── Cargar estado del backend (si hay red) o cola ──
+  const cargar = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
+    if (online) {
       try {
-        const { data } = await api.get('/pausas/activa')
-        setPausaActiva(data ?? null)
+        try {
+          const { data } = await api.get('/fichajes/activo')
+          setFichajeActivo(data)
+        } catch (err: unknown) {
+          const e = err as { response?: { status?: number } }
+          if (e?.response?.status === 404) setFichajeActivo(null)
+        }
+        try {
+          const { data } = await api.get('/pausas/activa')
+          setPausaActiva(data ?? null)
+        } catch {
+          setPausaActiva(null)
+        }
       } catch {
-        setPausaActiva(null)
+        // sin red intermitente, no hacemos nada
       }
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
     }
-  }
+    await refrescarCola()
+    setLoading(false)
+    setRefreshing(false)
+  }, [online, refrescarCola])
 
   useEffect(() => {
     void cargar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [cargar])
+
+  // ── Sincronización automática al recuperar conexión ──
+  useEffect(() => {
+    if (!online) return
+    ;(async () => {
+      const pendientes = await contarPendientes()
+      if (pendientes === 0) return
+      const { ok, fallidas } = await sincronizar()
+      if (ok > 0) {
+        Alert.alert(
+          '✓ Sincronización completada',
+          `${ok} ${ok === 1 ? 'acción sincronizada' : 'acciones sincronizadas'} con éxito.` +
+          (fallidas.length > 0 ? `\n\n${fallidas.length} pendientes de reintentar.` : '')
+        )
+        await cargar(true)
+      }
+    })()
+  }, [online, cargar])
 
   async function getLocation() {
     try {
@@ -109,29 +142,39 @@ export default function FichajeScreen() {
       return {
         latitud:  loc.coords.latitude,
         longitud: loc.coords.longitude,
-        mocked:   loc.mocked === true,    // ← Android lo proporciona, iOS siempre será false
+        mocked:   loc.mocked === true,
       }
     } catch {
       return null
     }
   }
 
+  // ── Entrada ──
   async function handleEntrada(tipo: TipoFichaje) {
     setModalTipoFichaje(false)
     setActionLoading(true)
     try {
       const loc = await getLocation()
-      await api.post('/fichajes/entrada', { ...(loc ?? {}), tipo })
-      await cargar()
+      const clientId = nuevoClientId()
+      const clientTimestamp = isoNow()
+      const payload = { ...(loc ?? {}), tipo }
+
+      if (online) {
+        await api.post('/fichajes/entrada', { ...payload, clientId, clientTimestamp })
+      } else {
+        await encolar({ tipo: 'fichaje_entrada', clientId, clientTimestamp, payload })
+        Alert.alert('Sin conexión', 'Entrada registrada localmente. Se enviará automáticamente cuando vuelvas a tener conexión.')
+      }
+      await cargar(true)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      const msg = e?.response?.data?.message ?? 'Error al registrar entrada'
-      Alert.alert('No se puede fichar', msg)
+      Alert.alert('No se puede fichar', e?.response?.data?.message ?? 'Error al registrar entrada')
     } finally {
       setActionLoading(false)
     }
   }
 
+  // ── Salida ──
   function handleSalida() {
     if (pausaActiva) {
       Alert.alert('Pausa activa', 'Reanuda la pausa antes de registrar la salida.')
@@ -143,9 +186,17 @@ export default function FichajeScreen() {
         text: 'Confirmar', style: 'destructive', onPress: async () => {
           setActionLoading(true)
           try {
-            await api.post('/fichajes/salida')
+            const clientId = nuevoClientId()
+            const clientTimestamp = isoNow()
+            if (online) {
+              await api.post('/fichajes/salida', { clientId, clientTimestamp })
+            } else {
+              await encolar({ tipo: 'fichaje_salida', clientId, clientTimestamp, payload: {} })
+              Alert.alert('Sin conexión', 'Salida registrada localmente. Se enviará automáticamente cuando vuelvas a tener conexión.')
+            }
             setFichajeActivo(null)
             setTiempo('')
+            await cargar(true)
           } catch (err: unknown) {
             const e = err as { response?: { data?: { message?: string } } }
             Alert.alert('Error', e?.response?.data?.message ?? 'Error al registrar salida')
@@ -157,12 +208,20 @@ export default function FichajeScreen() {
     ])
   }
 
+  // ── Iniciar pausa ──
   async function iniciarPausa(tipo: TipoPausa) {
     setModalTipoPausa(false)
     setActionLoading(true)
     try {
-      await api.post('/pausas/iniciar', { tipo })
-      await cargar()
+      const clientId = nuevoClientId()
+      const clientTimestamp = isoNow()
+      if (online) {
+        await api.post('/pausas/iniciar', { tipo, clientId, clientTimestamp })
+      } else {
+        await encolar({ tipo: 'pausa_iniciar', clientId, clientTimestamp, payload: { tipo } })
+        Alert.alert('Sin conexión', 'Pausa registrada localmente.')
+      }
+      await cargar(true)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo iniciar la pausa')
@@ -171,11 +230,19 @@ export default function FichajeScreen() {
     }
   }
 
+  // ── Reanudar pausa ──
   async function reanudar() {
     setActionLoading(true)
     try {
-      await api.post('/pausas/reanudar')
-      await cargar()
+      const clientId = nuevoClientId()
+      const clientTimestamp = isoNow()
+      if (online) {
+        await api.post('/pausas/reanudar', { clientId, clientTimestamp })
+      } else {
+        await encolar({ tipo: 'pausa_reanudar', clientId, clientTimestamp, payload: {} })
+        Alert.alert('Sin conexión', 'Reanudación registrada localmente.')
+      }
+      await cargar(true)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       Alert.alert('Error', e?.response?.data?.message ?? 'No se pudo reanudar')
@@ -188,14 +255,33 @@ export default function FichajeScreen() {
     return <View style={s.center}><ActivityIndicator size="large" color="#00923C" /></View>
   }
 
-  const activo = !!fichajeActivo
-  const enPausa = !!pausaActiva
+  // Estado UI: si hay cola offline pendiente de fichaje_entrada, tratar como "activo offline"
+  const colaTieneEntradaPendiente = colaPendientes.some(c => c.tipo === 'fichaje_entrada')
+  const colaTieneSalidaPendiente  = colaPendientes.some(c => c.tipo === 'fichaje_salida')
+  const colaTienePausaPendiente   = colaPendientes.some(c => c.tipo === 'pausa_iniciar')
+  const colaTieneReanudarPendiente= colaPendientes.some(c => c.tipo === 'pausa_reanudar')
+
+  const activo  = !!fichajeActivo || (colaTieneEntradaPendiente && !colaTieneSalidaPendiente)
+  const enPausa = !!pausaActiva   || (colaTienePausaPendiente   && !colaTieneReanudarPendiente)
 
   return (
     <ScrollView
       contentContainerStyle={s.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void cargar() }} tintColor="#00923C" />}
     >
+      {/* Banner offline */}
+      {!online && (
+        <View style={s.offlineBanner}>
+          <Text style={s.offlineText}>
+            📡 Sin conexión
+            {colaPendientes.length > 0 && ` · ${colaPendientes.length} ${colaPendientes.length === 1 ? 'acción pendiente' : 'acciones pendientes'}`}
+          </Text>
+          <Text style={s.offlineSub}>
+            Se sincronizará automáticamente al recuperar la conexión
+          </Text>
+        </View>
+      )}
+
       {/* Reloj */}
       <View style={s.clockCard}>
         <Text style={s.clockTime}>{hora}</Text>
@@ -227,10 +313,13 @@ export default function FichajeScreen() {
               {TIPOS_PAUSA.find(t => t.val === pausaActiva.tipo)?.label ?? pausaActiva.tipo} desde {new Date(pausaActiva.horaInicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
             </Text>
           )}
+          {!online && (colaTieneEntradaPendiente || colaTienePausaPendiente) && (
+            <Text style={s.statusOffline}>⚠ Pendiente de sincronizar</Text>
+          )}
         </View>
       </View>
 
-      {/* Botón principal */}
+      {/* Botones */}
       {!activo && (
         <TouchableOpacity
           style={[s.mainBtn, s.btnEntrada, actionLoading && s.btnDisabled]}
@@ -299,7 +388,7 @@ export default function FichajeScreen() {
          :         'Pulsa para iniciar tu jornada laboral'}
       </Text>
 
-      {/* Modal: tipo de fichaje */}
+      {/* Modal tipo fichaje */}
       <Modal visible={modalTipoFichaje} transparent animationType="slide"
              onRequestClose={() => setModalTipoFichaje(false)}>
         <View style={s.modalOverlay}>
@@ -320,7 +409,7 @@ export default function FichajeScreen() {
         </View>
       </Modal>
 
-      {/* Modal: tipo de pausa */}
+      {/* Modal tipo pausa */}
       <Modal visible={modalTipoPausa} transparent animationType="slide"
              onRequestClose={() => setModalTipoPausa(false)}>
         <View style={s.modalOverlay}>
@@ -347,6 +436,12 @@ export default function FichajeScreen() {
 const s = StyleSheet.create({
   container: { flexGrow: 1, padding: 20, backgroundColor: '#D6F0E0', alignItems: 'center' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#D6F0E0' },
+  offlineBanner: {
+    width: '100%', backgroundColor: '#FAEEDA', borderWidth: 1, borderColor: '#F5A623',
+    borderRadius: 12, padding: 12, marginBottom: 12,
+  },
+  offlineText: { fontSize: 14, fontWeight: '700', color: '#B07300', textAlign: 'center' },
+  offlineSub:  { fontSize: 11, color: '#B07300', textAlign: 'center', marginTop: 2 },
   clockCard: {
     backgroundColor: '#fff', borderRadius: 20, padding: 28, alignItems: 'center',
     width: '100%', marginBottom: 16,
@@ -365,6 +460,7 @@ const s = StyleSheet.create({
   statusLabel: { fontSize: 16, fontWeight: '700' },
   statusSub:   { fontSize: 13, color: '#5A6475', marginTop: 2 },
   statusTimer: { fontSize: 22, fontWeight: '700', color: '#00923C', marginTop: 4, letterSpacing: 1 },
+  statusOffline: { fontSize: 11, fontWeight: '700', color: '#B07300', marginTop: 4 },
   mainBtn: {
     width: 200, height: 200, borderRadius: 100,
     justifyContent: 'center', alignItems: 'center',
